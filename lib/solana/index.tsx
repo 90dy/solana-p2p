@@ -15,6 +15,8 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import WebView from "react-native-webview";
 import { useAssets } from "expo-asset";
+import * as FileSystem from "expo-file-system";
+import { View } from "react-native";
 
 type JSONValue = undefined | null | string | number | boolean | JSONObject | JSONArray;
 
@@ -50,7 +52,7 @@ type SolanaConn = {
 
 export type SolanaConnectAction = AsyncAction<"CONNECT", SolanaConn>;
 
-export type SolanaAccountAction = AsyncAction<"ACCOUNT_GET", { secretKey?: string | null }, SolanaAccount>;
+export type SolanaAccountAction = AsyncAction<"ACCOUNT_GET", Partial<SolanaAccount>, SolanaAccount>;
 
 export type SolanaTokenAction =
   | AsyncAction<"TOKEN_LIST", undefined, SolanaToken[]>
@@ -176,14 +178,22 @@ function connectionReducer(state: SolanaConnectionState = {}, action: SolanaActi
 }
 
 function reducer(state: SolanaState = {}, action: SolanaAction): SolanaState {
+  console.log("action", action);
   return {
     connection: connectionReducer(state.connection, action),
   };
 }
 
 export function SolanaProvider({ children }: PropsWithChildren<unknown>) {
-  const [assets, error] = useAssets([require("../assets/solana/index.html"), require("../assets/solana/index.js")]);
-  const uri = assets?.[0]?.uri;
+  const [assets, error] = useAssets([require("./webview/index.html"), require("./webview/index.cjs")]);
+  const indexHtmlUri = assets?.[0]?.uri;
+  const indexJsPath = assets?.[1]?.localUri;
+  const [injectedJavaScript, setInjectedJavaScript] = useState<string>();
+  useEffect(() => {
+    (async () => {
+      if (indexJsPath) setInjectedJavaScript(await FileSystem.readAsStringAsync(indexJsPath));
+    })();
+  }, [indexJsPath]);
 
   const webview = useRef<WebView>(null);
   const [state, nativeDispatch] = useReducer<Reducer<SolanaState, SolanaAction>>(reducer, initialState);
@@ -193,34 +203,38 @@ export function SolanaProvider({ children }: PropsWithChildren<unknown>) {
     nativeDispatch(action);
   }
 
-  // inject solana web & connect to solana cluster
-  useEffect(() => {
-    if (!webview.current) return;
-    webview.current?.injectJavaScript(`
-			const script = document.createElement('script')
-			script.src = "${assets?.[1]?.uri}"
-			document.head.appendChild(script)
-		`);
-  }, [webview?.current]);
+  const [loading, setLoading] = useState(true);
 
   return (
-    <>
-      {uri && (
-        <WebView
-          ref={webview}
-          // @ts-ignore
-          source={{ uri }}
-          onLoadStart={() => {}}
-          onMessage={(event) => {
-            const action = JSON.parse(event.nativeEvent.data) as SolanaAction;
-            nativeDispatch(action);
-          }}
-          allowFileAccess
-          javaScriptEnabled
-        />
-      )}
-      <SolanaContext.Provider value={[state, dispatch]}>{children}</SolanaContext.Provider>
-    </>
+    <SolanaContext.Provider value={[state, dispatch]}>
+      <View style={{ height: 0 }}>
+        {indexHtmlUri && injectedJavaScript && (
+          <WebView
+            ref={webview}
+            source={{ uri: indexHtmlUri }}
+            allowFileAccess
+            javaScriptEnabled
+            injectedJavaScript={injectedJavaScript}
+            onLoadEnd={() => {
+              setLoading(false);
+            }}
+            onMessage={(event) => {
+              const message = JSON.parse(event.nativeEvent.data) as
+                | { console: { log: JSONArray; error: JSONArray; group: JSONArray; groupEnd: JSONArray } }
+                | { action: SolanaAction };
+              if ("action" in message) {
+                nativeDispatch(message.action);
+              }
+              if ("console" in message) {
+                // @ts-ignore
+                Object.entries(message.console).forEach(([key, args]) => console[key]?.(...args));
+              }
+            }}
+          />
+        )}
+      </View>
+      {!loading && children}
+    </SolanaContext.Provider>
   );
 }
 
@@ -228,26 +242,43 @@ export default function useSolana() {
   return useContext(SolanaContext);
 }
 
-export function useConnection(options: { cluster: Web3.Cluster } = { cluster: "devnet" }): SolanaConnectionState {
+export function useConnection(options: SolanaConn = { cluster: "devnet" }): SolanaConnectionState {
   const [state, dispatch] = useSolana();
   useEffect(() => {
-    if (state.connection?.data) return;
-    dispatch({ type: "CONNECT", payload: options });
-  }, [state.connection]);
+    if (!state.connection?.success && !state.connection?.loading) {
+      dispatch({ type: "CONNECT", payload: options });
+    }
+  }, []);
   return state.connection ?? {};
 }
 
 export function useAccount(): SolanaAccountState {
   const [, dispatch] = useSolana();
-  const { data: conn, ...rest } = useConnection();
+  const conn = useConnection();
+  const secretKey = conn?.data?.account?.data?.secretKey;
+  const publicKey = conn?.data?.account?.data?.publicKey;
+  useEffect(() => {
+    if (secretKey) {
+      AsyncStorage.setItem("account-secret-key", secretKey);
+    }
+  }, [secretKey]);
+  useEffect(() => {
+    if (secretKey) {
+      AsyncStorage.setItem("account-public-key", secretKey);
+    }
+  }, [publicKey]);
   useEffect(() => {
     (async () => {
-      // TODO: should not save secretkey everytime we call useAccount
-      if (conn?.account?.data?.secretKey) {
-        return AsyncStorage.setItem("account-secret-key", conn.account.data.secretKey);
-      }
-      dispatch({ type: "ACCOUNT_GET", payload: { secretKey: await AsyncStorage.getItem("account-secret-key") } });
+      if (!conn.success || conn?.data?.account?.success || conn?.data?.account?.loading) return;
+      dispatch({
+        type: "ACCOUNT_GET",
+        payload: {
+          secretKey: (await AsyncStorage.getItem("account-secret-key")) ?? undefined,
+          publicKey: (await AsyncStorage.getItem("account-public-key")) ?? undefined,
+        },
+      });
     })();
-  }, [conn?.account?.data]);
-  return conn?.account ?? rest;
+  }, [conn.success, conn?.data?.account?.data]);
+  const { data, ...rest } = conn;
+  return conn?.data?.account ?? rest;
 }

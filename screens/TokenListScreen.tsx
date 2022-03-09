@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import { useAccount } from "../lib/solana";
 
 import { RootTabScreenProps } from "../types";
 
 export default function TokenList({ navigation }: RootTabScreenProps<"TokenList">) {
+  const { data: account, loading, error } = useAccount();
   const tokens = useState([]);
-  useEffect(() => {}, []);
-  return (
+  return loading ? (
+    <ActivityIndicator />
+  ) : error ? (
+    <Text>Error: {error.message}</Text>
+  ) : (
     <ScrollView>
       {tokens.map((token, index) => (
         <Pressable key={index} onPress={() => {}}></Pressable>

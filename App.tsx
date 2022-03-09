@@ -3,7 +3,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import useCachedResources from "./hooks/useCachedResources";
 import useColorScheme from "./hooks/useColorScheme";
-import { SolanaProvider } from "./hooks/useSolana";
+import { SolanaProvider } from "./lib/solana";
 import Navigation from "./navigation";
 
 export default function App() {
