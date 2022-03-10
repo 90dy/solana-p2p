@@ -5,4 +5,4 @@ const defaultConfig = getDefaultConfig(__dirname);
 // @ts-ignore
 defaultConfig.resolver.assetExts.push("cjs");
 
-module.exports = defaultConfig.
+module.exports = defaultConfig;
