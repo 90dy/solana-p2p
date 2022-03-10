@@ -9,8 +9,7 @@
     "web": "expo start --web",
     "eject": "expo eject",
     "test": "jest --watchAll",
-    "shell": "sh",
-    "postinstall": "sh ./scripts/bundle_solana_spl-token.sh"
+    "shell": "sh"
   },
   "jest": {
     "preset": "jest-expo"
@@ -39,6 +38,7 @@
     "react": "17.0.1",
     "react-dom": "^17.0.2",
     "react-native": "0.64.3",
+    "react-native-elements": "^3.4.2",
     "react-native-safe-area-context": "3.3.2",
     "react-native-screens": "~3.10.1",
     "react-native-web": "0.17.1",
