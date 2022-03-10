@@ -114,20 +114,20 @@ const SolanaContext = createContext<SolanaContext>([{}, (action: SolanaAction) =
 
 const initialState: SolanaState = {};
 
-function reduceLoading() {
+function reduceLoading<T>(data: T) {
   return {
     loading: true,
     error: undefined,
     success: undefined,
-    data: undefined,
+    data,
   };
 }
-function reduceError(payload: { message: string }) {
+function reduceError<T>(data: T, payload: { message: string }) {
   return {
     loading: false,
     error: new Error(payload?.message),
     success: false,
-    data: undefined,
+    data,
   };
 }
 function reduceSuccess<T>(data: T) {
@@ -142,17 +142,17 @@ function reduceSuccess<T>(data: T) {
 function tokenListReducer(state: SolanaTokenListState = {}, action: SolanaAction): SolanaTokenListState {
   switch (action.type) {
     case "TOKEN_LIST":
-      return reduceLoading();
+      return reduceLoading(state.data);
     case "TOKEN_LIST_ERROR":
-      return reduceError(action.payload);
+      return reduceError(state.data, action.payload);
     case "TOKEN_LIST_SUCCESS":
       return reduceSuccess(action.payload);
     case "TOKEN_ADD":
-      return reduceLoading();
+      return reduceLoading(state.data);
     case "TOKEN_ADD_ERROR":
-      return reduceError(action.payload);
+      return reduceError(state.data, action.payload);
     case "TOKEN_ADD_SUCCESS":
-      return reduceSuccess([...(state.data ?? []), action.payload]);
+      return reduceSuccess([action.payload, ...(state.data ?? [])]);
     default:
       if (!state.success) return state;
       return state;
@@ -162,9 +162,9 @@ function tokenListReducer(state: SolanaTokenListState = {}, action: SolanaAction
 function accountReducer(state: SolanaAccountState = {}, action: SolanaAction): SolanaAccountState {
   switch (action.type) {
     case "ACCOUNT_GET":
-      return reduceLoading();
+      return reduceLoading(state.data);
     case "ACCOUNT_GET_ERROR":
-      return reduceError(action.payload);
+      return reduceError(state.data, action.payload);
     case "ACCOUNT_GET_SUCCESS":
       return reduceSuccess(action.payload);
     default:
@@ -182,9 +182,9 @@ function accountReducer(state: SolanaAccountState = {}, action: SolanaAction): S
 function connectionReducer(state: SolanaConnectionState = {}, action: SolanaAction): SolanaConnectionState {
   switch (action.type) {
     case "CONNECT":
-      return reduceLoading();
+      return reduceLoading(state.data);
     case "CONNECT_ERROR":
-      return reduceError(action.payload);
+      return reduceError(state.data, action.payload);
     case "CONNECT_SUCCESS":
       return reduceSuccess(action.payload);
     default:
@@ -215,10 +215,11 @@ export function SolanaProvider({ children }: PropsWithChildren<unknown>) {
   const webview = useRef<WebView>(null);
 
   function reducer(state: SolanaState = {}, action: SolanaAction): SolanaState {
+    console.log("prevState", state);
     const newState = {
       connection: connectionReducer(state.connection, action),
     };
-    console.log("state", newState);
+    console.log("newState", newState);
     return newState;
   }
   const [state, nativeDispatch] = useReducer<Reducer<SolanaState, SolanaAction>>(reducer, initialState);
@@ -227,7 +228,6 @@ export function SolanaProvider({ children }: PropsWithChildren<unknown>) {
     console.log("action", action);
     nativeDispatch(action);
     webview.current?.injectJavaScript(`
-			console.log('webview', webview)
 			webview.state = ${JSON.stringify(state)};
 			webview.webDispatch(${JSON.stringify(action)})
 		`);
@@ -350,5 +350,18 @@ export function useTokenList(): SolanaTokenListState {
     dispatch({ type: "TOKEN_LIST" });
   }, [shouldDispatch]);
 
+  return { data, loading, error, success };
+}
+
+export function useTokenInfo(address: string): AsyncState<SolanaToken> {
+  const tokenList = useTokenList();
+  const token = tokenList.data?.find((token) => token.account.address === address);
+  const [loading, error, success, data] = [
+    tokenList?.loading,
+    tokenList?.error ??
+      (!token && !tokenList?.loading && !tokenList?.success ? new Error("Token not found") : undefined),
+    tokenList?.success,
+    token,
+  ];
   return { data, loading, error, success };
 }

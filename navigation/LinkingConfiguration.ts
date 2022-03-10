@@ -19,6 +19,7 @@ const linking: LinkingOptions<RootStackParamList> = {
           TokenList: {
             screens: {
               TokenListScreen: "token-list",
+              TokenInfoScreen: "token-info",
             },
           },
           TabOne: {

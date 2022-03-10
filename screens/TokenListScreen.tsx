@@ -1,29 +1,36 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useAccount, useTokenList } from "../lib/solana";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Button, Text } from "react-native-elements";
+import { useTokenList } from "../lib/solana";
 
-import { RootTabScreenProps } from "../types";
+import { TokenStackScreenProps } from "../types";
 
-export default function TokenList({ navigation }: RootTabScreenProps<"TokenList">) {
+export default function TokenList({ navigation }: TokenStackScreenProps<"TokenList">) {
   const { data: tokens, loading, error } = useTokenList();
 
-  return loading ? (
-    <ActivityIndicator />
-  ) : error ? (
-    <>
-      <Text>Error: {error.message}</Text>
-    </>
-  ) : (
+  return (
     <ScrollView>
-      {tokens?.map((token, index) => (
-        <View key={token.account.address}>
-          <Text>
-            {token.account.address} (mint: {token.mint.address})
-          </Text>
-          <Text>
-            {token.account.amount} / {token.mint.supply}
-          </Text>
-        </View>
+      {loading ? (
+        <ActivityIndicator />
+      ) : error ? (
+        <>
+          <Text>Error: {error.message}</Text>
+        </>
+      ) : undefined}
+      {tokens?.map((token) => (
+        <Button
+          key={token.account.address}
+          onPress={() => navigation.push("TokenInfo", { address: token.account.address })}
+          type="outline"
+          title={
+            <View style={{ flexDirection: "column" }}>
+              <Text style={{ fontWeight: "bold", fontSize: 12 }}>{token.account.address}</Text>
+              <Text style={{ fontStyle: "italic", fontSize: 12 }}>mint: {token.mint.address}</Text>
+              <Text style={{ fontStyle: "italic", fontSize: 12 }}>
+                {token.account.amount} / {token.mint.supply}
+              </Text>
+            </View>
+          }
+        />
       ))}
     </ScrollView>
   );

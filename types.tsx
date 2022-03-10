@@ -25,11 +25,20 @@ export type RootStackScreenProps<Screen extends keyof RootStackParamList> = Nati
   Screen
 >;
 
-export type RootTabParamList = {
-  TokenList: undefined;
+export type RootTabParamList = TokenStackParamList & {
   TabOne: undefined;
   TabTwo: undefined;
 };
+
+export type TokenStackParamList = {
+  TokenList: undefined;
+  TokenInfo: { address: string };
+};
+
+export type TokenStackScreenProps<Screen extends keyof TokenStackParamList> = NativeStackScreenProps<
+  TokenStackParamList,
+  Screen
+>;
 
 export type RootTabScreenProps<Screen extends keyof RootTabParamList> = CompositeScreenProps<
   BottomTabScreenProps<RootTabParamList, Screen>,

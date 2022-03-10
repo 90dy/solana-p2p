@@ -18,8 +18,9 @@ import ModalScreen from "../screens/ModalScreen";
 import NotFoundScreen from "../screens/NotFoundScreen";
 import TabOneScreen from "../screens/TabOneScreen";
 import TabTwoScreen from "../screens/TabTwoScreen";
+import TokenInfoScreen from "../screens/TokenInfoScreen";
 import TokenListScreen from "../screens/TokenListScreen";
-import { RootStackParamList, RootTabParamList, RootTabScreenProps } from "../types";
+import { RootStackParamList, RootTabParamList, RootTabScreenProps, TokenStackParamList } from "../types";
 import LinkingConfiguration from "./LinkingConfiguration";
 
 export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {
@@ -34,22 +35,22 @@ export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeNa
  * A root stack navigator is often used for displaying modals on top of all other content.
  * https://reactnavigation.org/docs/modal
  */
-const Stack = createNativeStackNavigator<RootStackParamList>();
+const RootStack = createNativeStackNavigator<RootStackParamList>();
 
 function RootNavigator() {
   const { success } = useAccount();
   return (
-    <Stack.Navigator>
+    <RootStack.Navigator>
       {!success ? (
-        <Stack.Screen name="Auth" component={AuthScreen} />
+        <RootStack.Screen name="Auth" component={AuthScreen} />
       ) : (
-        <Stack.Screen name="Root" component={BottomTabNavigator} options={{ headerShown: false }} />
+        <RootStack.Screen name="Root" component={BottomTabNavigator} options={{ headerShown: false }} />
       )}
-      <Stack.Group screenOptions={{ presentation: "modal" }}>
-        <Stack.Screen name="Modal" component={ModalScreen} />
-      </Stack.Group>
-      <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: "Oops!" }} />
-    </Stack.Navigator>
+      <RootStack.Group screenOptions={{ presentation: "modal" }}>
+        <RootStack.Screen name="Modal" component={ModalScreen} />
+      </RootStack.Group>
+      <RootStack.Screen name="NotFound" component={NotFoundScreen} options={{ title: "Oops!" }} />
+    </RootStack.Navigator>
   );
 }
 
@@ -66,26 +67,17 @@ function BottomTabNavigator() {
   return (
     <BottomTab.Navigator
       initialRouteName="TokenList"
-      screenOptions={{
+      screenOptions={({ route: { name } }) => ({
         tabBarActiveTintColor: Colors[colorScheme].tint,
-      }}
+        headerShown: !name.startsWith("Token"),
+      })}
     >
       <BottomTab.Screen
         name="TokenList"
-        component={TokenListScreen}
+        component={TokenNavigator}
         options={({ navigation }: RootTabScreenProps<"TokenList">) => ({
           title: "Tokens",
           tabBarIcon: ({ color }) => <TabBarIcon name="dollar" color={color} />,
-          headerRight: () => (
-            <Pressable
-              onPress={() => dispatch({ type: "TOKEN_ADD" })}
-              style={({ pressed }) => ({
-                opacity: pressed ? 0.5 : 1,
-              })}
-            >
-              <FontAwesome name="plus-circle" size={25} color={Colors[colorScheme].text} style={{ marginRight: 15 }} />
-            </Pressable>
-          ),
         })}
       />
       {/* <BottomTab.Screen
@@ -115,6 +107,42 @@ function BottomTabNavigator() {
         }}
       /> */}
     </BottomTab.Navigator>
+  );
+}
+
+const TokenStack = createNativeStackNavigator<TokenStackParamList>();
+
+function TokenNavigator() {
+  const colorScheme = useColorScheme();
+  return (
+    <TokenStack.Navigator>
+      <TokenStack.Screen
+        name="TokenList"
+        component={TokenListScreen}
+        options={{
+          title: "Tokens",
+          headerRight: () => {
+            const [, dispatch] = useSolana();
+            return (
+              <Pressable
+                onPress={() => dispatch({ type: "TOKEN_ADD" })}
+                style={({ pressed }) => ({
+                  opacity: pressed ? 0.5 : 1,
+                })}
+              >
+                <FontAwesome
+                  name="plus-circle"
+                  size={25}
+                  color={Colors[colorScheme].text}
+                  style={{ marginRight: 15 }}
+                />
+              </Pressable>
+            );
+          },
+        }}
+      />
+      <TokenStack.Screen name="TokenInfo" component={TokenInfoScreen} options={{ title: "Token" }} />
+    </TokenStack.Navigator>
   );
 }
 
