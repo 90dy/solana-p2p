@@ -1,20 +1,29 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text } from "react-native";
-import { useAccount } from "../lib/solana";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useAccount, useTokenList } from "../lib/solana";
 
 import { RootTabScreenProps } from "../types";
 
 export default function TokenList({ navigation }: RootTabScreenProps<"TokenList">) {
-  const { data: account, loading, error } = useAccount();
-  const tokens = useState([]);
+  const { data: tokens, loading, error } = useTokenList();
+
   return loading ? (
     <ActivityIndicator />
   ) : error ? (
-    <Text>Error: {error.message}</Text>
+    <>
+      <Text>Error: {error.message}</Text>
+    </>
   ) : (
     <ScrollView>
-      {tokens.map((token, index) => (
-        <Pressable key={index} onPress={() => {}}></Pressable>
+      {tokens?.map((token, index) => (
+        <View key={token.account.address}>
+          <Text>
+            {token.account.address} (mint: {token.mint.address})
+          </Text>
+          <Text>
+            {token.account.amount} / {token.mint.supply}
+          </Text>
+        </View>
       ))}
     </ScrollView>
   );

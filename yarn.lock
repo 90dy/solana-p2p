@@ -1876,6 +1876,11 @@
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-1.1.2.tgz#ccb91445360179a04e7fe6aff78c00ffc1eeaf82"
   integrity sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==
 
+"@types/babel__code-frame@*":
+  version "7.0.3"
+  resolved "https://registry.yarnpkg.com/@types/babel__code-frame/-/babel__code-frame-7.0.3.tgz#eda94e1b7c9326700a4b69c485ebbc9498a0b63f"
+  integrity sha512-2TN6oiwtNjOezilFVl77zwdNPwQWaDBBCCWWxyo1ctiO3vAtd7H/aB/CBJdw9+kqq3+latD0SXoedIuHySSZWw==
+
 "@types/babel__core@^7.0.0", "@types/babel__core@^7.1.7":
   version "7.1.18"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.1.18.tgz#1a29abcc411a9c05e2094c98f9a1b7da6cdf49f8"
@@ -1963,6 +1968,67 @@
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.179.tgz#490ec3288088c91295780237d2497a3aa9dfb5c5"
   integrity sha512-uwc1x90yCKqGcIOAT6DwOSuxnrAbpkdPsUOZtwrXb4D/6wZs+6qG7QnIawDuZWg0sWpxl+ltIKCaLoMlna678w==
 
+"@types/metro-babel-transformer@*":
+  version "0.66.0"
+  resolved "https://registry.yarnpkg.com/@types/metro-babel-transformer/-/metro-babel-transformer-0.66.0.tgz#54eb259038e699d27ed72cd69856a84fc31d4380"
+  integrity sha512-EMp16oxuhMJWuZ0p+/7Fz/hRxlTfiMr6LPctHQnIDhUFVuWcIYmDL9segxIp5vQXWE6kopjOlAnm84o4toWojg==
+
+"@types/metro-cache@*":
+  version "0.66.0"
+  resolved "https://registry.yarnpkg.com/@types/metro-cache/-/metro-cache-0.66.0.tgz#771c141ff6d0509324d6c8acb5a0cf332ddd0718"
+  integrity sha512-VZyANwzn1aO6pqnJKPSvwk4yWOX23oolsVH68oAe4zlZiwduRHBoTsG7KhmrvuE9AOAAYB3YCOZfY2/fz9X7Lw==
+  dependencies:
+    "@types/node" "*"
+
+"@types/metro-config@*", "@types/metro-config@^0.66.0":
+  version "0.66.0"
+  resolved "https://registry.yarnpkg.com/@types/metro-config/-/metro-config-0.66.0.tgz#91cd115773227d56bd79fde3025feaf30ba33f21"
+  integrity sha512-2H52IsyIXwQvakfjxV1sRDGtq25m8C7Rtf1lSVVFeM54KKeKZRThqJj5c/HoVvAVCswneogyyWmjv9Gn1JUqaw==
+  dependencies:
+    "@types/metro" "*"
+    "@types/metro-cache" "*"
+    "@types/metro-resolver" "*"
+    "@types/metro-source-map" "*"
+    "@types/metro-transform-worker" "*"
+
+"@types/metro-core@*":
+  version "0.66.0"
+  resolved "https://registry.yarnpkg.com/@types/metro-core/-/metro-core-0.66.0.tgz#35477ebccfdc4a94080fde3a22c89f053ec2365d"
+  integrity sha512-bTlWh1gf2DqLtcA3XnJgR4h4UO65uFhKWPF1XikudeUMAvVh0Hv2uDAdinP1kRhWFSccmYsa74dr1CVZNXDiqA==
+  dependencies:
+    "@types/node" "*"
+
+"@types/metro-resolver@*":
+  version "0.66.0"
+  resolved "https://registry.yarnpkg.com/@types/metro-resolver/-/metro-resolver-0.66.0.tgz#3d3c59c8d4068f4e0429db912bad6d774709fc52"
+  integrity sha512-a97Su7R7XoKuEuhMSeAqddfeb6QygRwXYjHDHKtGoIF4IkXt5FAjW5Vf+oJTpzgPIptRpViuLYre89pzudC/+g==
+
+"@types/metro-source-map@*":
+  version "0.66.0"
+  resolved "https://registry.yarnpkg.com/@types/metro-source-map/-/metro-source-map-0.66.0.tgz#32286858a5d7e266e73d5abed7c4e3b33b6626bd"
+  integrity sha512-lzZDCemXrM7XfS1D3Zmb6mOdevfk8jZ/433gqkbkTmY9IivKzr+KyXG39MSrOdF3QTXwu2J9qAfLr26pTxPcUQ==
+
+"@types/metro-transform-worker@*":
+  version "0.66.0"
+  resolved "https://registry.yarnpkg.com/@types/metro-transform-worker/-/metro-transform-worker-0.66.0.tgz#fdefbb7474f887eb5bcbffd3a5696a9f199a9200"
+  integrity sha512-lyFAFiY2lkQhJKOcvOFnD7jgDY++eEEP1febRkNGsl8zrmvsXSa5/NBhAw06dGEkzZr/LOE3MxCo8k7qunfgDg==
+  dependencies:
+    "@types/metro" "*"
+    "@types/metro-babel-transformer" "*"
+    "@types/metro-source-map" "*"
+
+"@types/metro@*":
+  version "0.66.1"
+  resolved "https://registry.yarnpkg.com/@types/metro/-/metro-0.66.1.tgz#f619bc21ff2a459eff2222ca13a58693dd0ebfe3"
+  integrity sha512-dwmII5ifXDuBDT3w7fWYKLT/TPsVcU3I8ydj3uoLmUFNTpsc3H+2I6ovDIiQKlx/GI1mE4LswzLo/zkqMFu5AQ==
+  dependencies:
+    "@types/babel__code-frame" "*"
+    "@types/metro-babel-transformer" "*"
+    "@types/metro-config" "*"
+    "@types/metro-core" "*"
+    "@types/metro-source-map" "*"
+    "@types/metro-transform-worker" "*"
+
 "@types/node@*":
   version "17.0.21"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.21.tgz#864b987c0c68d07b4345845c3e63b75edd143644"
@@ -1997,6 +2063,13 @@
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/@types/range-parser/-/range-parser-1.2.4.tgz#cd667bcfdd025213aafb7ca5915a932590acdcdc"
   integrity sha512-EEhsLsD6UsDM1yFhAvy0Cjr6VwmpMWqFBCb9w07wVugF7w9nfajxLuVmngTIpgS6svCnm6Vaw+MZhoDCKnOfsw==
+
+"@types/react-dom@^17.0.13":
+  version "17.0.13"
+  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-17.0.13.tgz#a3323b974ee4280070982b3112351bb1952a7809"
+  integrity sha512-wEP+B8hzvy6ORDv1QBhcQia4j6ea4SFIBttHYpXKPFZRviBvknq0FRh3VrIxeXUmsPkwuXVZrVGG7KUVONmXCQ==
+  dependencies:
+    "@types/react" "*"
 
 "@types/react-native@~0.64.12":
   version "0.64.24"
@@ -2672,7 +2745,7 @@ buffer@6.0.1:
     base64-js "^1.3.1"
     ieee754 "^1.2.1"
 
-buffer@~6.0.3:
+buffer@^6.0.3, buffer@~6.0.3:
   version "6.0.3"
   resolved "https://registry.yarnpkg.com/buffer/-/buffer-6.0.3.tgz#2ace578459cc8fbe2a70aaa8f52ee63b6a74c6c6"
   integrity sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==
@@ -5422,6 +5495,11 @@ lodash._reinterpolate@^3.0.0:
   resolved "https://registry.yarnpkg.com/lodash._reinterpolate/-/lodash._reinterpolate-3.0.0.tgz#0ccf2d89166af03b3663c796538b75ac6e114d9d"
   integrity sha1-DM8tiRZq8Ds2Y8eWU4t1rG4RTZ0=
 
+lodash.clonedeep@^4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/lodash.clonedeep/-/lodash.clonedeep-4.5.0.tgz#e23f3f9c4f8fbdde872529c1071857a086e5ccef"
+  integrity sha1-4j8/nE+Pvd6HJSnBBxhXoIblzO8=
+
 lodash.debounce@^4.0.8:
   version "4.0.8"
   resolved "https://registry.yarnpkg.com/lodash.debounce/-/lodash.debounce-4.0.8.tgz#82d79bff30a67c4005ffd5e2515300ad9ca4d7af"
@@ -6585,14 +6663,14 @@ react-devtools-core@^4.6.0:
     shell-quote "^1.6.1"
     ws "^7"
 
-react-dom@17.0.1:
-  version "17.0.1"
-  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-17.0.1.tgz#1de2560474ec9f0e334285662ede52dbc5426fc6"
-  integrity sha512-6eV150oJZ9U2t9svnsspTMrWNyHc6chX0KzDeAOXftRa8bNeOKTTfCJ7KorIwenkHd2xqVTBTCZd79yk/lx/Ug==
+react-dom@^17.0.2:
+  version "17.0.2"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-17.0.2.tgz#ecffb6845e3ad8dbfcdc498f0d0a939736502c23"
+  integrity sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
-    scheduler "^0.20.1"
+    scheduler "^0.20.2"
 
 react-freeze@^1.0.0:
   version "1.0.0"
@@ -7519,6 +7597,14 @@ sudo-prompt@^9.0.0:
   version "9.2.1"
   resolved "https://registry.yarnpkg.com/sudo-prompt/-/sudo-prompt-9.2.1.tgz#77efb84309c9ca489527a4e749f287e6bdd52afd"
   integrity sha512-Mu7R0g4ig9TUuGSxJavny5Rv0egCEtpZRNMrZaYS1vxkiIxGiGUwoezU3LazIQ+KE04hTrTfNPgxU5gzi7F5Pw==
+
+superjson@^1.8.1:
+  version "1.8.1"
+  resolved "https://registry.yarnpkg.com/superjson/-/superjson-1.8.1.tgz#c0fe510b8ff71c3bde5733a125623994ca9ec608"
+  integrity sha512-RaBKdbsYj29Ky+XcdE11pJAyKXPrqiCV269koH2WAlpeHh/9qnK0ET84GiVWvnutiufyDolK/vS2jtdFYr341w==
+  dependencies:
+    debug "^4.3.1"
+    lodash.clonedeep "^4.5.0"
 
 superstruct@^0.14.2:
   version "0.14.2"

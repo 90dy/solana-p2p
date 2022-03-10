@@ -1,4 +1,5 @@
 import type * as Web3 from "@solana/web3.js";
+import type * as SplToken from "@solana/spl-token";
 import {
   createContext,
   Dispatch,
@@ -35,11 +36,32 @@ type AsyncAction<
   Result extends Payload | undefined = undefined
 > =
   | ({ type: Type } & (Args extends undefined ? { payload?: Args } : { payload: Args }))
-  | { type: `${Type}_ERROR`; payload: Payload<{ message: string }> }
+  | { type: `${Type}_ERROR`; payload: Payload<{ message: string; stack?: string }> }
   | { type: `${Type}_SUCCESS`; payload: Result };
 
 // Models
-type SolanaToken = {};
+type SolanaToken = {
+  mint: {
+    address: string;
+    decimals: number;
+    freezeAuthority?: string;
+    isInitialized: boolean;
+    mintAuthority?: string;
+    supply: string;
+  };
+  account: {
+    address: string;
+    amount: string;
+    closeAuthority?: string;
+    delegate?: string;
+    delegatedAmount: string;
+    isFrozen: boolean;
+    isInitialized: boolean;
+    isNative: boolean;
+    mint: string;
+    owner: string;
+  };
+};
 type SolanaAccount = {
   publicKey: string;
   secretKey: number[];
@@ -178,15 +200,17 @@ function connectionReducer(state: SolanaConnectionState = {}, action: SolanaActi
 }
 
 export function SolanaProvider({ children }: PropsWithChildren<unknown>) {
-  const [assets, error] = useAssets([require("./webview/index.html"), require("./webview/index.cjs")]);
-  const indexHtmlUri = assets?.[0]?.uri;
-  const indexJsPath = assets?.[1]?.localUri;
+  const [assets, error] = useAssets([require("./webview.html"), require("./webview.cjs")]);
+  const webviewHtmlUri = assets?.[0]?.uri;
+  const webviewJsPath = assets?.[1]?.localUri;
   const [injectedJavaScript, setInjectedJavaScript] = useState<string>();
+  console.log("webviewHtmlUri", webviewHtmlUri);
+  console.log("webviewJsPath", webviewJsPath);
   useEffect(() => {
     (async () => {
-      if (indexJsPath) setInjectedJavaScript(await FileSystem.readAsStringAsync(indexJsPath));
+      if (webviewJsPath) setInjectedJavaScript(await FileSystem.readAsStringAsync(webviewJsPath));
     })();
-  }, [indexJsPath]);
+  }, [webviewJsPath]);
 
   const webview = useRef<WebView>(null);
 
@@ -194,17 +218,18 @@ export function SolanaProvider({ children }: PropsWithChildren<unknown>) {
     const newState = {
       connection: connectionReducer(state.connection, action),
     };
+    console.log("state", newState);
     return newState;
   }
   const [state, nativeDispatch] = useReducer<Reducer<SolanaState, SolanaAction>>(reducer, initialState);
-  console.log("state", state);
 
   const dispatch = debounce(500, function dispatch(action: SolanaAction) {
     console.log("action", action);
     nativeDispatch(action);
     webview.current?.injectJavaScript(`
-			state = ${JSON.stringify(state)};
-			webDispatch(${JSON.stringify(action)})
+			console.log('webview', webview)
+			webview.state = ${JSON.stringify(state)};
+			webview.webDispatch(${JSON.stringify(action)})
 		`);
   });
 
@@ -213,10 +238,10 @@ export function SolanaProvider({ children }: PropsWithChildren<unknown>) {
   return (
     <SolanaContext.Provider value={[state, dispatch]}>
       <View style={{ height: 0 }}>
-        {indexHtmlUri && injectedJavaScript && (
+        {webviewHtmlUri && injectedJavaScript && (
           <WebView
             ref={webview}
-            source={{ uri: indexHtmlUri }}
+            source={{ uri: webviewHtmlUri }}
             allowFileAccess
             javaScriptEnabled
             injectedJavaScript={injectedJavaScript}
@@ -304,7 +329,6 @@ export function useAccount(): SolanaAccountState {
       });
     })();
   }, [shouldDispatch]);
-  console.log("account", { data, loading, error, success });
   return { data, loading, error, success };
 }
 
