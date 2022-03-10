@@ -10,5 +10,5 @@ declare global {
   export { SolanaAction, SolanaState } from "../hooks/useSolana";
 
   export function encode64(bytes: Uint8Array): string;
-  export function decode64(base64: string): Uint8Array;
+  export function decode64AsArrayBuffer(base64: string): Uint8Array;
 }

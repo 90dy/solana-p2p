@@ -17,6 +17,7 @@ import WebView from "react-native-webview";
 import { useAssets } from "expo-asset";
 import * as FileSystem from "expo-file-system";
 import { View } from "react-native";
+import { debounce } from "throttle-debounce";
 
 type JSONValue = undefined | null | string | number | boolean | JSONObject | JSONArray;
 
@@ -33,16 +34,15 @@ type AsyncAction<
   Args extends Payload | undefined = undefined,
   Result extends Payload | undefined = undefined
 > =
-  | { type: Type; payload: Args }
+  | ({ type: Type } & (Args extends undefined ? { payload?: Args } : { payload: Args }))
   | { type: `${Type}_ERROR`; payload: Payload<{ message: string }> }
   | { type: `${Type}_SUCCESS`; payload: Result };
 
 // Models
-
 type SolanaToken = {};
 type SolanaAccount = {
   publicKey: string;
-  secretKey: string;
+  secretKey: number[];
 };
 type SolanaConn = {
   cluster: Web3.Cluster;
@@ -132,7 +132,7 @@ function tokenListReducer(state: SolanaTokenListState = {}, action: SolanaAction
     case "TOKEN_ADD_SUCCESS":
       return reduceSuccess([...(state.data ?? []), action.payload]);
     default:
-      if (!state.data) return state;
+      if (!state.success) return state;
       return state;
   }
 }
@@ -166,7 +166,7 @@ function connectionReducer(state: SolanaConnectionState = {}, action: SolanaActi
     case "CONNECT_SUCCESS":
       return reduceSuccess(action.payload);
     default:
-      if (!state.data) return state;
+      if (!state.success) return state;
       return {
         ...state,
         data: {
@@ -175,13 +175,6 @@ function connectionReducer(state: SolanaConnectionState = {}, action: SolanaActi
         },
       };
   }
-}
-
-function reducer(state: SolanaState = {}, action: SolanaAction): SolanaState {
-  console.log("action", action);
-  return {
-    connection: connectionReducer(state.connection, action),
-  };
 }
 
 export function SolanaProvider({ children }: PropsWithChildren<unknown>) {
@@ -196,12 +189,24 @@ export function SolanaProvider({ children }: PropsWithChildren<unknown>) {
   }, [indexJsPath]);
 
   const webview = useRef<WebView>(null);
-  const [state, nativeDispatch] = useReducer<Reducer<SolanaState, SolanaAction>>(reducer, initialState);
 
-  function dispatch(action: SolanaAction) {
-    webview.current?.injectJavaScript(`webDispatch(${JSON.stringify(action)})`);
-    nativeDispatch(action);
+  function reducer(state: SolanaState = {}, action: SolanaAction): SolanaState {
+    const newState = {
+      connection: connectionReducer(state.connection, action),
+    };
+    return newState;
   }
+  const [state, nativeDispatch] = useReducer<Reducer<SolanaState, SolanaAction>>(reducer, initialState);
+  console.log("state", state);
+
+  const dispatch = debounce(500, function dispatch(action: SolanaAction) {
+    console.log("action", action);
+    nativeDispatch(action);
+    webview.current?.injectJavaScript(`
+			state = ${JSON.stringify(state)};
+			webDispatch(${JSON.stringify(action)})
+		`);
+  });
 
   const [loading, setLoading] = useState(true);
 
@@ -223,6 +228,7 @@ export function SolanaProvider({ children }: PropsWithChildren<unknown>) {
                 | { console: { log: JSONArray; error: JSONArray; group: JSONArray; groupEnd: JSONArray } }
                 | { action: SolanaAction };
               if ("action" in message) {
+                console.log("action", message.action);
                 nativeDispatch(message.action);
               }
               if ("console" in message) {
@@ -244,41 +250,81 @@ export default function useSolana() {
 
 export function useConnection(options: SolanaConn = { cluster: "devnet" }): SolanaConnectionState {
   const [state, dispatch] = useSolana();
+  const [loading, error, success, data] = [
+    state.connection?.loading,
+    state.connection?.error,
+    state.connection?.success,
+    state.connection?.data,
+  ];
+  const shouldDispatch = !success && !loading && !error;
   useEffect(() => {
-    if (!state.connection?.success && !state.connection?.loading) {
-      dispatch({ type: "CONNECT", payload: options });
-    }
-  }, []);
-  return state.connection ?? {};
+    if (!shouldDispatch) return;
+    dispatch({ type: "CONNECT", payload: options });
+  }, [shouldDispatch]);
+  return { data, loading, error, success };
 }
 
 export function useAccount(): SolanaAccountState {
   const [, dispatch] = useSolana();
   const conn = useConnection();
+  const account = conn?.data?.account;
+
+  const [loading, error, success, data] = [
+    account?.loading ?? conn?.loading ?? (!conn?.error && !conn.success),
+    account?.error ?? conn?.error,
+    account?.success,
+    account?.data,
+  ];
+  const shouldDispatch = !success && !loading && !error;
+
   const secretKey = conn?.data?.account?.data?.secretKey;
-  const publicKey = conn?.data?.account?.data?.publicKey;
   useEffect(() => {
     if (secretKey) {
-      AsyncStorage.setItem("account-secret-key", secretKey);
+      AsyncStorage.setItem("account-secret-key", String.fromCharCode(...secretKey));
     }
   }, [secretKey]);
+
+  const publicKey = conn?.data?.account?.data?.publicKey;
   useEffect(() => {
-    if (secretKey) {
-      AsyncStorage.setItem("account-public-key", secretKey);
+    if (publicKey) {
+      AsyncStorage.setItem("account-public-key", publicKey);
     }
   }, [publicKey]);
+
   useEffect(() => {
     (async () => {
-      if (!conn.success || conn?.data?.account?.success || conn?.data?.account?.loading) return;
+      if (!shouldDispatch) return;
+      const secretKeyStr = await AsyncStorage.getItem("account-secret-key");
       dispatch({
         type: "ACCOUNT_GET",
         payload: {
-          secretKey: (await AsyncStorage.getItem("account-secret-key")) ?? undefined,
+          secretKey: secretKeyStr ? Array.from(secretKeyStr).map((_) => _.charCodeAt(0)) : undefined,
           publicKey: (await AsyncStorage.getItem("account-public-key")) ?? undefined,
         },
       });
     })();
-  }, [conn.success, conn?.data?.account?.data]);
-  const { data, ...rest } = conn;
-  return conn?.data?.account ?? rest;
+  }, [shouldDispatch]);
+  console.log("account", { data, loading, error, success });
+  return { data, loading, error, success };
+}
+
+export function useTokenList(): SolanaTokenListState {
+  const [, dispatch] = useSolana();
+  const account = useAccount();
+  const tokenList = account?.data?.tokenList;
+
+  const [loading, error, success, data] = [
+    tokenList?.loading ?? account?.loading ?? (!account.error && !account.success),
+    tokenList?.error ?? account?.error,
+    tokenList?.success,
+    tokenList?.data,
+  ];
+  const shouldDispatch = !success && !loading && !error;
+
+  useEffect(() => {
+    if (!shouldDispatch) return;
+    dispatch({ type: "TOKEN_LIST" });
+  }, [shouldDispatch]);
+
+  return { data, loading, error, success };
 }
